@@ -3,7 +3,7 @@ module Ddb
     class Railtie < Rails::Railtie
 
       initializer "userstamp.model_extensions" do
-        ActiveRecord::Base.send(:include, Ddb::Userstamp::Stamper)
+        ActiveRecord::Base.send(:extend, Ddb::Userstamp::Stamper)
         ActiveRecord::Base.send(:include, Ddb::Userstamp::Stampable)
       end
 
