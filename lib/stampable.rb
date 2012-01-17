@@ -2,7 +2,8 @@ module Ddb #:nodoc:
   module Userstamp
 
     mattr_accessor :stamper_klass
-    @@stamper_klass = nil
+    @@stamper_klass = defined?(User) ? User : nil
+
     # Extends the stamping functionality of ActiveRecord by automatically recording the model
     # responsible for creating, updating, and deleting the current object. See the Stamper
     # and Userstamp modules for further documentation on how the entire process works.
