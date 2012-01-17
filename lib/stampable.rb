@@ -100,27 +100,26 @@ module Ddb #:nodoc:
 
       module InstanceMethods #:nodoc:
         private
-          def has_stamper?
-            !self.class.stamper_class.nil? && !self.class.stamper_class.stamper.nil? rescue false
-          end
 
           def set_creator_attribute
             return unless self.record_userstamp
-            if respond_to?(self.creator_attribute.to_sym) && has_stamper?
+            if respond_to?(self.creator_attribute.to_sym)
               self.send("#{self.creator_attribute}=".to_sym, Ddb::Userstamp.stamper_klass.stamper)
             end
           end
 
           def set_updater_attribute
+            raise "You must define the Stamper Class. Use 'Ddb::Userstamp.stamper_klass = <class>'" unless Ddb::Userstamp.stamper_klass
+
             return unless self.record_userstamp
-            if respond_to?(self.updater_attribute.to_sym) && has_stamper?
+            if respond_to?(self.updater_attribute.to_sym)
               self.send("#{self.updater_attribute}=".to_sym, Ddb::Userstamp.stamper_klass.stamper)
             end
           end
 
           def set_deleter_attribute
             return unless self.record_userstamp
-            if respond_to?(self.deleter_attribute.to_sym) && has_stamper?
+            if respond_to?(self.deleter_attribute.to_sym)
               self.send("#{self.deleter_attribute}=".to_sym, Ddb::Userstamp.stamper_klass.stamper)
               save unless defined?(Paranoia) # don't save now with Paranoia
             end
