@@ -19,9 +19,6 @@ module Ddb #:nodoc:
           class_attribute  :record_userstamp
           self.record_userstamp = true
 
-          # Which class is responsible for stamping? Defaults to :user.
-          class_attribute  :stamper_class_name
-
           # What column should be used for the creator stamp?
           class_attribute  :creator_attribute
 
@@ -45,8 +42,7 @@ module Ddb #:nodoc:
         # method to use. Here's an example:
         #
         #   class Post < ActiveRecord::Base
-        #     stampable :stamper_class_name => :person,
-        #               :creator_attribute  => :create_user,
+        #     stampable :creator_attribute  => :create_user,
         #               :updater_attribute  => :update_user,
         #               :deleter_attribute  => :delete_user
         #   end
@@ -54,31 +50,31 @@ module Ddb #:nodoc:
         # The method will automatically setup all the associations, and create <tt>before_save</tt>
         # and <tt>before_create</tt> filters for doing the stamping.
         def stampable(options = {})
+
           defaults  = {
-                        :stamper_class_name => (Ddb::Userstamp.stamper_klass || :user),
                         :link_method => :belongs_to,
                         :creator_attribute  => :creator_id,
                         :updater_attribute  => :updater_id,
                         :deleter_attribute  => :deleter_id
                       }.merge(options)
 
-          self.stamper_class_name = defaults[:stamper_class_name].to_sym
           self.creator_attribute  = defaults[:creator_attribute].to_sym
           self.updater_attribute  = defaults[:updater_attribute].to_sym
           self.deleter_attribute  = defaults[:deleter_attribute].to_sym
           self.link_method = defaults[:link_method].to_sym
-          class_eval do 
-             send(self.link_method, :creator, :class_name => self.stamper_class_name.to_s.singularize.camelize,
+
+          class_eval do
+             send(self.link_method, :creator, :class_name => Ddb::Userstamp.stamper_klass.to_s,
                                  :foreign_key => self.creator_attribute)
-                                 
-             send(self.link_method, :updater, :class_name => self.stamper_class_name.to_s.singularize.camelize,
+
+             send(self.link_method, :updater, :class_name => Ddb::Userstamp.stamper_klass.to_s,
                                  :foreign_key => self.updater_attribute)
                                  
             before_validation :set_updater_attribute
             before_validation :set_creator_attribute, :on => :create
                                  
             if defined?(Caboose::Acts::Paranoid) or defined?(Paranoia)
-              belongs_to :deleter, :class_name => self.stamper_class_name.to_s.singularize.camelize,
+              belongs_to :deleter, :class_name => Ddb::Userstamp.stamper_klass.to_s,
                                    :foreign_key => self.deleter_attribute
               before_destroy  :set_deleter_attribute
             end
@@ -100,9 +96,6 @@ module Ddb #:nodoc:
           self.record_userstamp = original_value
         end
 
-        def stamper_class #:nodoc:
-          stamper_class_name.to_s.camelize.constantize rescue nil
-        end
       end
 
       module InstanceMethods #:nodoc:
@@ -114,21 +107,21 @@ module Ddb #:nodoc:
           def set_creator_attribute
             return unless self.record_userstamp
             if respond_to?(self.creator_attribute.to_sym) && has_stamper?
-              self.send("#{self.creator_attribute}=".to_sym, self.class.stamper_class.stamper)
+              self.send("#{self.creator_attribute}=".to_sym, Ddb::Userstamp.stamper_klass.stamper)
             end
           end
 
           def set_updater_attribute
             return unless self.record_userstamp
             if respond_to?(self.updater_attribute.to_sym) && has_stamper?
-              self.send("#{self.updater_attribute}=".to_sym, self.class.stamper_class.stamper)
+              self.send("#{self.updater_attribute}=".to_sym, Ddb::Userstamp.stamper_klass.stamper)
             end
           end
 
           def set_deleter_attribute
             return unless self.record_userstamp
             if respond_to?(self.deleter_attribute.to_sym) && has_stamper?
-              self.send("#{self.deleter_attribute}=".to_sym, self.class.stamper_class.stamper)
+              self.send("#{self.deleter_attribute}=".to_sym, Ddb::Userstamp.stamper_klass.stamper)
               save unless defined?(Paranoia) # don't save now with Paranoia
             end
           end
