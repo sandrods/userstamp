@@ -12,6 +12,8 @@ module Ddb #:nodoc:
         def stamper=(object)
           object_stamper = if object.is_a?(ActiveRecord::Base)
             object.send("#{object.class.primary_key}".to_sym)
+          elsif object.respond_to?(:id)
+            object.id
           else
             object
           end
