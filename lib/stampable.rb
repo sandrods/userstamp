@@ -1,18 +1,5 @@
 module Ddb #:nodoc:
   module Userstamp
-    # Determines what default columns to use for recording the current stamper.
-    # By default this is set to false, so the plug-in will use columns named
-    # <tt>creator_id</tt>, <tt>updater_id</tt>, and <tt>deleter_id</tt>.
-    #
-    # To turn compatibility mode on, place the following line in your environment.rb
-    # file:
-    #
-    #   Ddb::Userstamp.compatibility_mode = true
-    #
-    # This will cause the plug-in to use columns named <tt>created_by</tt>,
-    # <tt>updated_by</tt>, and <tt>deleted_by</tt>.
-    mattr_accessor :compatibility_mode
-    @@compatibility_mode = false
 
     mattr_accessor :stamper_klass
     @@stamper_klass = nil
@@ -35,18 +22,12 @@ module Ddb #:nodoc:
           class_attribute  :stamper_class_name
 
           # What column should be used for the creator stamp?
-          # Defaults to :creator_id when compatibility mode is off
-          # Defaults to :created_by when compatibility mode is on
           class_attribute  :creator_attribute
 
           # What column should be used for the updater stamp?
-          # Defaults to :updater_id when compatibility mode is off
-          # Defaults to :updated_by when compatibility mode is on
           class_attribute  :updater_attribute
 
           # What column should be used for the deleter stamp?
-          # Defaults to :deleter_id when compatibility mode is off
-          # Defaults to :deleted_by when compatibility mode is on
           class_attribute  :deleter_attribute
           
           #you can change your link method
@@ -75,9 +56,9 @@ module Ddb #:nodoc:
           defaults  = {
                         :stamper_class_name => (Ddb::Userstamp.stamper_klass || :user),
                         :link_method => :belongs_to,
-                        :creator_attribute  => Ddb::Userstamp.compatibility_mode ? :created_by : :creator_id,
-                        :updater_attribute  => Ddb::Userstamp.compatibility_mode ? :updated_by : :updater_id,
-                        :deleter_attribute  => Ddb::Userstamp.compatibility_mode ? :deleted_by : :deleter_id
+                        :creator_attribute  => :creator_id,
+                        :updater_attribute  => :updater_id,
+                        :deleter_attribute  => :deleter_id
                       }.merge(options)
 
           self.stamper_class_name = defaults[:stamper_class_name].to_sym
